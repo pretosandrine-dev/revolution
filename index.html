@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Visualisation</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root {
+            --bg-top: #8338ec;
+            --bg-mid: #3a2fa8;
+            --bg-bottom: #141738;
+            --text-white: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.65);
+            --text-green: #38ef7d;
+            --pill-bg: rgba(255, 255, 255, 0.18);
+            --pill-border: rgba(255, 255, 255, 0.12);
+            --card-glass: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --bottom-nav-bg: rgba(22, 25, 62, 0.94);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 42%, var(--bg-bottom) 100%);
+            min-height: 100vh;
+            color: var(--text-white);
+            display: flex;
+            justify-content: center;
+            overflow-x: hidden;
+            padding-bottom: 120px;
+            -webkit-touch-callout: none;
+        }
+
+        /* Désactivation de la sélection uniquement sur les libellés statiques, jamais sur les boutons/inputs */
+        .header-title, .balance-section, .actions-row, .banner-card, .tx-card, .bottom-nav-wrap {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .screen-container {
+            width: 100%;
+            max-width: 430px;
+            padding: calc(env(safe-area-inset-top, 20px) + 12px) 16px 20px 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 1. Bandeau supérieur */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .avatar-sp {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(135, 120, 255, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+
+        .search-bar {
+            flex: 1;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .search-bar svg {
+            width: 18px;
+            height: 18px;
+            fill: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-placeholder {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+
+        .icon-circle-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .icon-circle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #ffffff;
+        }
+
+        /* 2. Zone Solde */
+        .balance-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .balance-label {
+            font-size: 0.95rem;
+            color: var(--text-white);
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 3.4rem;
+            font-weight: 700;
+            letter-spacing: -1.2px;
+            display: flex;
+            align-items: baseline;
+            transition: transform 0.15s ease-out;
+        }
+
+        .balance-amount.pulse {
+            transform: scale(1.05);
+        }
+
+        .cents {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-left: 2px;
+        }
+
+        .currency {
+            font-size: 2.1rem;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
+        .pill-btn {
+            margin-top: 8px;
+            background: var(--pill-bg);
+            border: 1px solid var(--pill-border);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: var(--text-white);
+        }
+
+        /* 3. Espacement 50px */
+        .spacer-50 {
+            height: 50px;
+            width: 100%;
+        }
+
+        /* 4. Actions Row */
+        .actions-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 6px;
+            margin-bottom: 24px;
+        }
+
+        .action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            width: 76px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .action-circle {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, background-color 0.1s;
+            pointer-events: none;
+        }
+
+        .action-item:active .action-circle {
+            transform: scale(0.92);
+            background: rgba(255, 255, 255, 0.32);
+        }
+
+        .action-circle svg {
+            width: 24px;
+            height: 24px;
+            fill: #ffffff;
+        }
+
+        .action-text {
+            font-size: 0.78rem;
+            text-align: center;
+            line-height: 1.15;
+            color: var(--text-white);
+            font-weight: 450;
+            pointer-events: none;
+        }
+
+        /* 5. Bannière Récompense */
+        .banner-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--card-border);
+            margin-bottom: 16px;
+        }
+
+        .banner-text-box {
+            flex: 1;
+            padding-right: 14px;
+        }
+
+        .banner-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #ffffff;
+        }
+
+        .banner-desc {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.75);
+            line-height: 1.35;
+        }
+
+        .banner-illustration-box {
+            width: 82px;
+            height: 62px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+            transform: rotate(-8deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .banner-inner-badge {
+            width: 66px;
+            height: 46px;
+            background: linear-gradient(135deg, #7b2cbf, #3a86ff);
+            border-radius: 8px;
+        }
+
+        /* 6. Carte des Transactions */
+        .tx-card {
+            background: var(--card-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 20px 18px 16px 18px;
+            border: 1px solid var(--card-border);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .tx-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .tx-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar-wrap {
+            position: relative;
+        }
+
+        .avatar-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ffffff;
+        }
+
+        .avatar-circle.white-bg {
+            background: #ffffff;
+            color: #111111;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .badge-plus {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 17px;
+            height: 17px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            border: 2px solid #282467;
+        }
+
+        .tx-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .tx-title {
+            font-size: 0.96rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+
+        .tx-sub {
+            font-size: 0.78rem;
+            color: var(--text-dim);
+        }
+
+        .tx-amount {
+            font-size: 1.05rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tx-amount.green {
+            color: var(--text-green);
+        }
+
+        .tx-amount.white {
+            color: #ffffff;
+        }
+
+        .tx-footer-action {
+            text-align: center;
+            padding-top: 8px;
+            padding-bottom: 4px;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .tx-footer-action:active {
+            opacity: 0.6;
+        }
+
+        /* 7. Barre de Navigation Inférieure */
+        .bottom-nav-wrap {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+            padding: 0 16px;
+            pointer-events: none;
+        }
+
+        .bottom-nav {
+            width: 100%;
+            max-width: 400px;
+            height: 66px;
+            background: var(--bottom-nav-bg);
+            border-radius: 33px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+            pointer-events: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.68rem;
+            font-weight: 500;
+            flex: 1;
+            height: 100%;
+        }
+
+        .nav-item.active {
+            color: #ffffff;
+        }
+
+        .nav-pill-selected {
+            background: rgba(255, 255, 255, 0.14);
+            border-radius: 22px;
+            padding: 6px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .nav-icon {
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+        }
+
+        /* 8. Bottom Sheet d'Investissement */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 200;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .bottom-sheet {
+            width: 100%;
+            max-width: 430px;
+            background: #20224d;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px 20px calc(env(safe-area-inset-bottom, 20px) + 20px) 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .sheet-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .sheet-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: #ffffff;
+            font-size: 1rem;
+            outline: none;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        .sheet-btn-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            background: #ffffff;
+            color: #111;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 1rem;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        /* Canvas Confettis */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<div class="screen-container">
+
+    <!-- 1. Bandeau supérieur -->
+    <div class="top-bar">
+        <div class="avatar-sp">SP</div>
+        <div class="search-bar">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span class="search-placeholder">Rechercher</span>
+        </div>
+        <div class="icon-circle-btn">
+            <svg viewBox="0 0 24 24"><path d="M4 19h4v-7H4v7zm6 0h4v-11h-4v11zm6 0h4v-15h-4v15z"/></svg>
+        </div>
+        <div class="icon-circle-btn">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        </div>
+    </div>
+
+    <!-- 2. Zone Solde -->
+    <div class="balance-section">
+        <div class="balance-label">Personnel · EUR</div>
+        <div class="balance-amount" id="balance-display">
+            <span id="amount-whole">91</span>
+            <span class="cents" id="amount-cents">,64</span>
+            <span class="currency">€</span>
+        </div>
+        <div class="pill-btn">Comptes et Portefeuilles</div>
+    </div>
+
+    <!-- 3. Espacement 50px -->
+    <div class="spacer-50"></div>
+
+    <!-- 4. Actions (4 boutons) -->
+    <div class="actions-row">
+        <div class="action-item" id="btn-accept-transfer" role="button" tabindex="0">
+            <div class="action-circle">
+                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            </div>
+            <div class="action-text">Accepter le virement</div>
+        </div>
+
+        <div class="action-item" role="button">
+            <div class="action-circle">
+                <svg viewBox="0 0 24 24"><path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/></svg>
+            </div>
+            <div class="action-text">Entre mes comptes</div>
+        </div>
+
+        <div class="action-item" role="button">
+            <div class="action-circle">
+                <svg viewBox="0 0 24 24"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm9.5-20L2 7v2h19V7l-9.5-5z"/></svg>
+            </div>
+            <div class="action-text">Informations</div>
+        </div>
+
+        <div class="action-item" role="button">
+            <div class="action-circle">
+                <svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            </div>
+            <div class="action-text">Plus</div>
+        </div>
+    </div>
+
+    <!-- 5. Bannière Récompense -->
+    <div class="banner-card">
+        <div class="banner-text-box">
+            <div class="banner-title">Votre récompense boostée</div>
+            <div class="banner-desc" id="banner-dynamic-text">
+                Vous avez gagné une recommandation d'ici au 6 octobre. Félicitations.
+            </div>
+        </div>
+        <div class="banner-illustration-box">
+            <div class="banner-inner-badge"></div>
+        </div>
+    </div>
+
+    <!-- 6. Carte des Transactions -->
+    <div class="tx-card">
+        <!-- Ligne Dépense / Investissement -->
+        <div class="tx-row" id="expense-row">
+            <div class="tx-left">
+                <div class="avatar-wrap">
+                    <div class="avatar-circle white-bg" id="expense-avatar">INV</div>
+                </div>
+                <div class="tx-info">
+                    <div class="tx-title" id="expense-name">Elevenlabs</div>
+                    <div class="tx-sub" id="expense-date">25 sept., 19:50</div>
+                </div>
+            </div>
+            <div class="tx-amount white" id="expense-amount">-5,47 €</div>
+        </div>
+
+        <!-- Ligne Virement Reçu -->
+        <div class="tx-row" id="income-row">
+            <div class="tx-left">
+                <div class="avatar-wrap">
+                    <div class="avatar-circle" id="income-avatar" style="background-color: #e91e63;">GS</div>
+                    <div class="badge-plus">+</div>
+                </div>
+                <div class="tx-info">
+                    <div class="tx-title" id="income-name">GROUPE STRATÉGIE SUD</div>
+                    <div class="tx-sub" id="income-date">27 sept., 09:59</div>
+                </div>
+            </div>
+            <div class="tx-amount green" id="income-amount">+10 880 €</div>
+        </div>
+
+        <!-- Action Investissement -->
+        <div class="tx-footer-action" id="btn-open-investment" role="button" tabindex="0">Investissement</div>
+    </div>
+
+</div>
+
+<!-- 7. Barre de Navigation Inférieure Vectorielle HD -->
+<div class="bottom-nav-wrap">
+    <div class="bottom-nav">
+        <!-- Accueil -->
+        <div class="nav-item active">
+            <div class="nav-pill-selected">
+                <div class="nav-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6 3h7.2c2.9 0 5.3 2.1 5.3 4.9 0 2.2-1.3 4.1-3.3 4.7l3.8 8.4h-3.8l-3.3-7.5H9.6V21H6V3zm3.6 7.2h3.3c1.2 0 2.1-.8 2.1-1.9s-.9-1.9-2.1-1.9H9.6v3.8z"/>
+                    </svg>
+                </div>
+                <span>Accueil</span>
+            </div>
+        </div>
+
+        <!-- Investir -->
+        <div class="nav-item">
+            <div class="nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 19h2.5v-5.5H4V19zm4.2 0h2.5v-8.5H8.2V19zm4.3 0H15v-6h-2.5V19zm4.3 0h2.5V7.5h-2.5V19zm-13-11l5-4.5 4.5 4 6.5-6.5L20 4.5l-7.5 7.5-4.5-4-4.5 4z"/>
+                </svg>
+            </div>
+            <span>Investir</span>
+        </div>
+
+        <!-- Virements -->
+        <div class="nav-item">
+            <div class="nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6.5 11l-4 4 4 4v-2.8H14v-2.4H6.5V11zm11-6l4 4-4 4V10.2H10V7.8h7.5V5z"/>
+                </svg>
+            </div>
+            <span>Virements</span>
+        </div>
+
+        <!-- Cryptos -->
+        <div class="nav-item">
+            <div class="nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M15.5 10.2c.8-.5 1.3-1.4 1.3-2.5 0-1.9-1.4-3.2-3.6-3.4V2h-1.8v2.3H9.8V2H8v2.3H5.5v1.8h1.8v11.8H5.5v1.8H8V22h1.8v-2.3h1.6V22h1.8v-2.3c2.4-.2 4.1-1.6 4.1-3.8 0-1.4-.7-2.6-1.8-3.7zm-5.7-4.1h2.8c1.1 0 1.9.6 1.9 1.6s-.8 1.6-1.9 1.6H9.8V6.1zm3.3 11.8H9.8v-3.6h3.3c1.2 0 2.1.7 2.1 1.8s-.9 1.8-2.1 1.8z"/>
+                </svg>
+            </div>
+            <span>Cryptos</span>
+        </div>
+
+        <!-- RevPoints -->
+        <div class="nav-item">
+            <div class="nav-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 2l8.5 4.9v9.8L12 21.6 3.5 16.7V6.9L12 2zm0 4.2l1.2 3.6 3.6 1.2-3.6 1.2-1.2 3.6-1.2-3.6-3.6-1.2 3.6-1.2 1.2-3.6z"/>
+                </svg>
+            </div>
+            <span>RevPoints</span>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Investissement -->
+<div class="modal-overlay" id="modal-invest">
+    <div class="bottom-sheet">
+        <div class="sheet-title">Nouvel Investissement</div>
+        <input type="text" class="sheet-input" id="invest-title-input" placeholder="Libellé (ex : Formation Mastermind)">
+        <input type="number" class="sheet-input" id="invest-value-input" placeholder="Montant en € (ex : 500)">
+        <div class="sheet-btn-row">
+            <button class="btn-cancel" id="btn-cancel-invest" type="button">Annuler</button>
+            <button class="btn-confirm" id="btn-save-invest" type="button">Enregistrer</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Écouteur tactile compatible iOS / Safari
+    function attachFastClick(element, handler) {
+        if (!element) return;
+        let touched = false;
+        element.addEventListener('touchstart', (e) => {
+            touched = true;
+        }, { passive: true });
+
+        element.addEventListener('touchend', (e) => {
+            if (touched) {
+                e.preventDefault();
+                touched = false;
+                handler(e);
+            }
+        });
+
+        element.addEventListener('click', (e) => {
+            if (!touched) {
+                handler(e);
+            }
+        });
+    }
+
+    // --- 1. Moteur de Cotillons / Confettis ---
+    const canvas = document.getElementById("confetti-canvas");
+    const ctx = canvas.getContext("2d");
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function triggerConfetti() {
+        const colors = ["#ff3366", "#33ccff", "#38ef7d", "#ffd700", "#ff00ea", "#ffffff"];
+        for (let i = 0; i < 90; i++) {
+            particles.push({
+                x: window.innerWidth / 2,
+                y: window.innerHeight * 0.45,
+                w: Math.random() * 8 + 4,
+                h: Math.random() * 8 + 4,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                vx: (Math.random() - 0.5) * 14,
+                vy: (Math.random() - 0.8) * 16,
+                rotation: Math.random() * 360,
+                vRot: (Math.random() - 0.5) * 12,
+                opacity: 1
+            });
+        }
+    }
+
+    function renderConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = particles.length - 1; i >= 0; i--) {
+            const p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.35;
+            p.rotation += p.vRot;
+            p.opacity -= 0.012;
+
+            if (p.opacity <= 0) {
+                particles.splice(i, 1);
+                continue;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate((p.rotation * Math.PI) / 180);
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+            ctx.restore();
+        }
+        requestAnimationFrame(renderConfetti);
+    }
+    renderConfetti();
+
+    // --- 2. Banque de 40 Profils Clients ---
+    const clientProfiles = [
+        { name: "GROUPE STRATÉGIE SUD", initials: "GS", color: "#e91e63" },
+        { name: "CABINET AURA CONSEIL", initials: "AC", color: "#8e24aa" },
+        { name: "ATELIER NOVEMBRE", initials: "AN", color: "#00897b" },
+        { name: "STUDIO LUMEN SAS", initials: "SL", color: "#1e88e5" },
+        { name: "HOLDING VENDÔME CAPITAL", initials: "HV", color: "#c2185b" },
+        { name: "COLLECTIF HORIZON 360", initials: "CH", color: "#3949ab" },
+        { name: "MAISON ÉLÉMENTAIRE", initials: "ME", color: "#00acc1" },
+        { name: "FONDS ALTO PATRIMOINE", initials: "FA", color: "#43a047" },
+        { name: "AGENCE KARA BRANDING", initials: "AK", color: "#fb8c00" },
+        { name: "DR. CLAIRE FONTAINE", initials: "CF", color: "#f4511e" },
+        { name: "INSTITUT MÉTIERS D'ART", initials: "IM", color: "#6d4c41" },
+        { name: "KAPITAL EXPANSION SAS", initials: "KE", color: "#546e7a" },
+        { name: "PULSE DIGITAL LAB", initials: "PD", color: "#7cb342" },
+        { name: "SOCIÉTÉ CIVILE BOREAL", initials: "SB", color: "#1e88e5" },
+        { name: "M. ALEXANDRE DUBOIS", initials: "AD", color: "#d81b60" },
+        { name: "SYNERGIE AUDIT INTERNAT.", initials: "SA", color: "#5e35b1" },
+        { name: "TALENT LAB MANAGEMENT", initials: "TL", color: "#039be5" },
+        { name: "OPTIMA GROWTH CONSULT", initials: "OG", color: "#00897b" },
+        { name: "VILLA SERENA HOSPITALITY", initials: "VS", color: "#7cb342" },
+        { name: "ORION ASSET MANAGEMENT", initials: "OA", color: "#e53935" },
+        { name: "ATELIER ARCHI DESIGN", initials: "AA", color: "#8e24aa" },
+        { name: "MME LAURENCE BLANCHARD", initials: "LB", color: "#3949ab" },
+        { name: "EQUITY PARTNERS GROUP", initials: "EP", color: "#00acc1" },
+        { name: "CONSEIL & EXPANSION PRO", initials: "CE", color: "#43a047" },
+        { name: "ELEVATE VENTURES", initials: "EV", color: "#fb8c00" },
+        { name: "TERRA NOVA IMMOBILIER", initials: "TN", color: "#6d4c41" },
+        { name: "ALPHA COM INSTITUT", initials: "AC", color: "#546e7a" },
+        { name: "PRIME STRATEGY PARIS", initials: "PS", color: "#c2185b" },
+        { name: "M. MARC ANTOINE ROUX", initials: "MR", color: "#1e88e5" },
+        { name: "SUMMIT CAPITAL PARTNERS", initials: "SC", color: "#00897b" },
+        { name: "BLUEPRINT INNOVATION", initials: "BI", color: "#7cb342" },
+        { name: "INVICTUS CONSULTING", initials: "IC", color: "#f4511e" },
+        { name: "ZENITH ASSETS LTD", initials: "ZA", color: "#5e35b1" },
+        { name: "MME VALÉRIE ROCHE", initials: "VR", color: "#d81b60" },
+        { name: "HELIOS WEALTH ADVISORY", initials: "HW", color: "#e53935" },
+        { name: "SPHERE MARKETING SAS", initials: "SM", color: "#039be5" },
+        { name: "NEXTSTEP FORMATIONS", initials: "NF", color: "#43a047" },
+        { name: "CORP GLOBAL SERVICES", initials: "CG", color: "#8e24aa" },
+        { name: "ALLIANCE FINANCE EST", initials: "AF", color: "#fb8c00" },
+        { name: "HORIZON PATRIMOINE FAMILLE", initials: "HP", color: "#3949ab" }
+    ];
+
+    // --- 3. Solde & Virement ---
+    let balance = parseFloat(localStorage.getItem('user_balance')) || 91.64;
+    const creditAmounts = [998, 1880, 5480, 10880];
+
+    function updateBalanceUI(animate = false) {
+        const whole = Math.floor(balance);
+        const cents = Math.round((balance - whole) * 100).toString().padStart(2, '0');
+        
+        document.getElementById("amount-whole").textContent = whole.toLocaleString('fr-FR');
+        document.getElementById("amount-cents").textContent = `,${cents}`;
+
+        if (animate) {
+            const b = document.getElementById("balance-display");
+            b.classList.add("pulse");
+            setTimeout(() => b.classList.remove("pulse"), 200);
+        }
+
+        try {
+            localStorage.setItem('user_balance', balance.toFixed(2));
+        } catch (e) {}
+    }
+
+    // --- 4. Date Dynamique ---
+    function computeDynamicDate() {
+        const now = new Date();
+        const pivot = new Date(2026, 9, 6);
+        const periodMs = 15 * 24 * 60 * 60 * 1000;
+
+        let target = new Date(pivot.getTime());
+        while (now > target) {
+            target = new Date(target.getTime() + periodMs);
+        }
+
+        const formattedDate = target.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+        document.getElementById("banner-dynamic-text").textContent = 
+            `Vous avez gagné une recommandation d'ici au ${formattedDate}. Félicitations.`;
+    }
+
+    function getFormattedCurrentDate() {
+        const now = new Date();
+        const months = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+        const month = months[now.getMonth()];
+        const h = now.getHours().toString().padStart(2, '0');
+        const m = now.getMinutes().toString().padStart(2, '0');
+        return `${now.getDate()} ${month}, ${h}:${m}`;
+    }
+
+    // --- 5. Action : Accepter le Virement ---
+    attachFastClick(document.getElementById("btn-accept-transfer"), () => {
+        const randomAmount = creditAmounts[Math.floor(Math.random() * creditAmounts.length)];
+        balance += randomAmount;
+        updateBalanceUI(true);
+        triggerConfetti();
+
+        const profile = clientProfiles[Math.floor(Math.random() * clientProfiles.length)];
+        const dateStr = getFormattedCurrentDate();
+
+        document.getElementById("income-name").textContent = profile.name;
+        document.getElementById("income-date").textContent = dateStr;
+        document.getElementById("income-amount").textContent = `+${randomAmount.toLocaleString('fr-FR')} €`;
+        
+        const avatarEl = document.getElementById("income-avatar");
+        avatarEl.textContent = profile.initials;
+        avatarEl.style.backgroundColor = profile.color;
+
+        try {
+            localStorage.setItem('last_income', JSON.stringify({
+                name: profile.name,
+                initials: profile.initials,
+                color: profile.color,
+                date: dateStr,
+                amount: randomAmount
+            }));
+        } catch (e) {}
+
+        if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+    });
+
+    // --- 6. Action : Investissement ---
+    const modalInvest = document.getElementById("modal-invest");
+    const titleInput = document.getElementById("invest-title-input");
+    const valueInput = document.getElementById("invest-value-input");
+
+    attachFastClick(document.getElementById("btn-open-investment"), () => {
+        modalInvest.classList.add("active");
+        setTimeout(() => titleInput.focus(), 100);
+    });
+
+    attachFastClick(document.getElementById("btn-cancel-invest"), () => {
+        modalInvest.classList.remove("active");
+    });
+
+    attachFastClick(document.getElementById("btn-save-invest"), () => {
+        const title = titleInput.value.trim() || "Investissement Stratégique";
+        const val = parseFloat(valueInput.value) || 0;
+        const dateStr = getFormattedCurrentDate();
+
+        document.getElementById("expense-name").textContent = title;
+        document.getElementById("expense-date").textContent = dateStr;
+        document.getElementById("expense-amount").textContent = `-${val.toLocaleString('fr-FR')} €`;
+        document.getElementById("expense-avatar").textContent = title.substring(0, 3).toUpperCase();
+
+        try {
+            localStorage.setItem('last_expense', JSON.stringify({
+                name: title,
+                date: dateStr,
+                amount: val
+            }));
+        } catch (e) {}
+
+        titleInput.value = "";
+        valueInput.value = "";
+        modalInvest.classList.remove("active");
+    });
+
+    // --- 7. Restauration ---
+    function restoreState() {
+        try {
+            const savedIncome = localStorage.getItem('last_income');
+            if (savedIncome) {
+                const data = JSON.parse(savedIncome);
+                document.getElementById("income-name").textContent = data.name;
+                document.getElementById("income-date").textContent = data.date;
+                document.getElementById("income-amount").textContent = `+${data.amount.toLocaleString('fr-FR')} €`;
+                const a = document.getElementById("income-avatar");
+                a.textContent = data.initials;
+                a.style.backgroundColor = data.color;
+            }
+
+            const savedExpense = localStorage.getItem('last_expense');
+            if (savedExpense) {
+                const data = JSON.parse(savedExpense);
+                document.getElementById("expense-name").textContent = data.name;
+                document.getElementById("expense-date").textContent = data.date;
+                document.getElementById("expense-amount").textContent = `-${data.amount.toLocaleString('fr-FR')} €`;
+                document.getElementById("expense-avatar").textContent = data.name.substring(0, 3).toUpperCase();
+            }
+        } catch (e) {}
+
+        updateBalanceUI(false);
+        computeDynamicDate();
+    }
+
+    restoreState();
+</script>
+
+</body>
+</html>
